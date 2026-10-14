@@ -1,0 +1,255 @@
+rules_version = '2';
+
+// Règles de départ pour Kwetu Park.
+// Elles sont prévues pour remplacer le mode test avant une mise en production.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function activeManager() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/managers/$(request.auth.uid))
+          && get(/databases/$(database)/documents/managers/$(request.auth.uid)).data.active != false;
+    }
+
+    function activeAdministrator() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/administrators/$(request.auth.uid))
+          && get(/databases/$(database)/documents/administrators/$(request.auth.uid)).data.active != false;
+    }
+
+    // Nom historique observé dans la base : administrateur/{uid} au singulier.
+    // Son champ role détermine l'espace à ouvrir (gestionnaire ou admin).
+    function activeLegacyStaffDocument() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/administrateur/$(request.auth.uid))
+          && get(/databases/$(database)/documents/administrateur/$(request.auth.uid)).data.active != false
+          && get(/databases/$(database)/documents/administrateur/$(request.auth.uid)).data.disabled != true;
+    }
+
+    function legacyManagerRole() {
+      return activeLegacyStaffDocument()
+          && isManagerRole(get(/databases/$(database)/documents/administrateur/$(request.auth.uid)).data.role);
+    }
+
+    function legacyAdministratorRole() {
+      return activeLegacyStaffDocument()
+          && isAdministratorRole(get(/databases/$(database)/documents/administrateur/$(request.auth.uid)).data.role);
+    }
+
+    // Compatibilité avec les comptes du personnel créés directement dans
+    // users/{uid} par l'administrateur depuis Firebase Console. Un conducteur
+    // ne peut pas s'attribuer ce rôle lui-même : les règles de users ci-dessous
+    // interdisent toute élévation de rôle côté client.
+    function commonManagerRole() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager'
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'gestionnaire'
+          );
+    }
+
+    function commonAdministratorRole() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'administrator'
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'administrateur'
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          );
+    }
+
+    function staff() {
+      return activeManager()
+          || activeAdministrator()
+          || commonManagerRole()
+          || commonAdministratorRole()
+          || legacyManagerRole()
+          || legacyAdministratorRole();
+    }
+
+    function administrator() {
+      return activeAdministrator()
+          || commonAdministratorRole()
+          || legacyAdministratorRole();
+    }
+
+    function isManagerRole(value) {
+      return value == 'manager' || value == 'gestionnaire';
+    }
+
+    function isAdministratorRole(value) {
+      return value == 'administrator'
+          || value == 'administrateur'
+          || value == 'admin';
+    }
+
+    function canKeepOrSyncOwnRole(userId) {
+      return isOwner(userId)
+          && (
+            request.resource.data.role == resource.data.role
+            || ((activeManager() || commonManagerRole() || legacyManagerRole())
+                && isManagerRole(request.resource.data.role))
+            || ((activeAdministrator() || commonAdministratorRole() || legacyAdministratorRole())
+                && isAdministratorRole(request.resource.data.role))
+          );
+    }
+
+    match /users/{userId} {
+      allow create: if isOwner(userId)
+          && (request.resource.data.role == 'driver' || staff());
+      allow get: if isOwner(userId) || administrator();
+      allow list: if administrator();
+      allow update: if administrator() || canKeepOrSyncOwnRole(userId);
+      allow delete: if administrator();
+    }
+
+    // Ces collections sont créées par l'administrateur. Un utilisateur ne
+    // peut jamais s'accorder lui-même un rôle supérieur.
+    match /managers/{userId} {
+      allow get: if isOwner(userId) || administrator();
+      allow list: if administrator();
+      allow update: if administrator()
+          || (isOwner(userId)
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['lastLoginAt']));
+      allow create, delete: if administrator();
+    }
+
+    match /administrators/{userId} {
+      allow get: if isOwner(userId) || administrator();
+      allow list: if administrator();
+      allow update: if administrator()
+          || (isOwner(userId)
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['lastLoginAt']));
+      allow create, delete: if administrator();
+    }
+
+    // Collection française au singulier, conservée pour les documents qui
+    // existent déjà dans cette structure.
+    match /administrateur/{userId} {
+      allow get: if isOwner(userId) || administrator();
+      allow list: if administrator();
+      allow update: if administrator()
+          || (isOwner(userId)
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['lastLoginAt']));
+      allow create, delete: if administrator();
+    }
+
+    match /parking_spots/{spotId} {
+      allow read: if signedIn();
+      allow create, delete: if staff();
+      allow update: if staff()
+          || (signedIn()
+              && resource.data.status == 'available'
+              && request.resource.data.status == 'reserved'
+              && request.resource.data.reservedBy == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['status', 'reservationId', 'reservedBy', 'updatedAt']))
+          || (signedIn()
+              && resource.data.status == 'reserved'
+              && resource.data.reservedBy == request.auth.uid
+              && request.resource.data.status == 'available'
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['status', 'reservationId', 'reservedBy', 'updatedAt']));
+    }
+
+    // --- Réservations -------------------------------------------------------
+    //
+    // Un conducteur peut créer, annuler (tant que non payée), demander le
+    // paiement ou prolonger SA réservation, mais JAMAIS la marquer payée ni
+    // la passer en « confirmed » : cela exige un gestionnaire (guichet) ou la
+    // Cloud Function K-PAY (webhook, qui contourne les règles côté serveur).
+    function driverReservationUpdate() {
+      return signedIn()
+          && resource.data.userId == request.auth.uid
+          // Annulation par le propriétaire d'une réservation non payée.
+          && (request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['status', 'cancelledAt', 'updatedAt'])
+              && request.resource.data.status == 'cancelled'
+              && resource.data.paymentStatus != 'paid')
+          // Demande de paiement : le conducteur passe en « requested »,
+          // jamais en « paid ».
+          || (request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly([
+                    'paymentStatus',
+                    'paymentRequested',
+                    'paymentMethod',
+                    'paymentPhone',
+                    'requestedAt',
+                    'updatedAt',
+                  ])
+              && request.resource.data.paymentStatus == 'requested'
+              && request.resource.data.paymentRequested == true
+              && resource.data.paymentStatus == 'unpaid'
+              && resource.data.status == 'pending_payment')
+          // Prolongation : recalcul du montant via la durée, sans confirmation.
+          || (request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly([
+                    'departureHour',
+                    'duration',
+                    'amountFC',
+                    'extraHours',
+                    'extraAmountFC',
+                    'extensionStatus',
+                    'updatedAt',
+                  ])
+              && request.resource.data.extensionStatus == 'pending_payment'
+              && resource.data.paymentStatus != 'paid');
+    }
+
+    function staffReservationUpdate() {
+      return staff()
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'status',
+                'paymentStatus',
+                'paymentMethod',
+                'paymentPhone',
+                'paidAt',
+                'confirmedBy',
+                'checkedInAt',
+                'checkedInBy',
+                'checkedOutAt',
+                'checkedOutBy',
+                'completedAt',
+                'cancelledAt',
+                'updatedAt',
+              ]);
+    }
+
+    match /reservations/{reservationId} {
+      allow create: if signedIn()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.status == 'pending_payment'
+          && request.resource.data.paymentStatus == 'unpaid'
+          && !('paidAt' in request.resource.data)
+          && !('confirmedBy' in request.resource.data);
+      allow get, list: if signedIn()
+          && (resource.data.userId == request.auth.uid || staff());
+      allow update: if staffReservationUpdate()
+          || driverReservationUpdate();
+      allow delete: if administrator();
+    }
+
+    // --- Parkings (catalogue) ------------------------------------------------
+    match /parks/{parkId} {
+      allow read: if signedIn();
+      allow create, update, delete: if administrator();
+    }
+
+    // --- Notifications : chaque compte ne voit et n'écrit que dans sa boîte.
+    match /notifications/{userId}/items/{itemId} {
+      allow read, create, update, delete: if isOwner(userId);
+    }
+  }
+}

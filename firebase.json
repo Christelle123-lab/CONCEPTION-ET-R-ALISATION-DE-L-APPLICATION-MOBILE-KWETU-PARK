@@ -1,0 +1,29 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "kwetu-park",
+          "appId": "1:415999599401:android:0083859fd609dd8888cd38",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "kwetu-park",
+          "configurations": {
+            "android": "1:415999599401:android:0083859fd609dd8888cd38",
+            "web": "1:415999599401:web:eda9ce549b6a703488cd38"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  }
+}

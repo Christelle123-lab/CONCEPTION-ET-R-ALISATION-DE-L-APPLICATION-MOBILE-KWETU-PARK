@@ -1,0 +1,93 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter build windows --release
+
+## exception
+
+ProcessPackageException: ProcessException: Failed to find "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" in the search path.
+  Command: C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe 
+
+```
+#0      LocalProcessManager.start (package:process/src/interface/local_process_manager.dart:56:7)
+#1      ErrorHandlingProcessManager.start.<anonymous closure> (package:flutter_tools/src/base/error_handling_io.dart:1243:26)
+#2      _run (package:flutter_tools/src/base/error_handling_io.dart:1050:22)
+#3      ErrorHandlingProcessManager.start (package:flutter_tools/src/base/error_handling_io.dart:1241:12)
+#4      _DefaultProcessUtils.start (package:flutter_tools/src/base/process.dart:538:28)
+#5      _DefaultProcessUtils.stream (package:flutter_tools/src/base/process.dart:558:35)
+#6      _runCmakeGeneration (package:flutter_tools/src/windows/build_windows.dart:193:41)
+<asynchronous suspension>
+#7      buildWindows (package:flutter_tools/src/windows/build_windows.dart:105:5)
+<asynchronous suspension>
+#8      BuildWindowsCommand.runCommand (package:flutter_tools/src/commands/build_windows.dart:72:5)
+<asynchronous suspension>
+#9      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1630:27)
+<asynchronous suspension>
+#10     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#11     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#12     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:496:9)
+<asynchronous suspension>
+#13     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#14     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+<asynchronous suspension>
+#15     FlutterCommandRunner.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:307:33)
+<asynchronous suspension>
+#16     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:104:11)
+<asynchronous suspension>
+#17     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#18     main (package:flutter_tools/executable.dart:103:3)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel stable, 3.44.4, on Microsoft Windows [version 10.0.22631.3527], locale fr-CD) [638ms]
+    • Flutter version 3.44.4 on channel stable at D:\ChrisFlutter\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision ad70ec4617 (4 months ago), 2026-06-24 11:07:06 -0700
+    • Engine revision a10d8ac38d
+    • Dart version 3.12.2
+    • DevTools version 2.57.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[✓] Windows Version (11 Professionnel 64-bit, 23H2, 2009) [135,9s]
+
+[!] Android toolchain - develop for Android devices (Android SDK version 36.0.0) [244,9s]
+    • Android SDK at C:\Users\Administrator\AppData\Local\Android\sdk
+    • Emulator version 36.6.11.0 (build_id 15507667) (CL:N/A)
+    • Platform android-36.1, build-tools 36.0.0
+    • Java binary at: D:\Androidstudio\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    ✗ Could not determine java version
+    ✗ Android license status unknown.
+      Run `flutter doctor --android-licenses` to accept the SDK licenses.
+      See https://flutter.dev/to/windows-android-setup for more details.
+
+[✓] Chrome - develop for the web [183ms]
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[✓] Visual Studio - develop Windows apps (Visual Studio Build Tools 2019 16.11.56) [180ms]
+    • Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+    • Visual Studio Build Tools 2019 version 16.11.37301.9
+    • Windows 10 SDK version 10.0.19041.0
+
+[✓] Connected device (3 available) [393ms]
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [version 10.0.22631.3527]
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 155.0.8059.39
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 107.0.1418.24 (unsupported)
+
+[!] Network resources [136,6s]
+    ✗ An HTTP error occurred while checking "https://pub.dev/": Connection closed before full header was received
+    ✗ An HTTP error occurred while checking "https://storage.googleapis.com/": Connection closed before full header was received
+    ✗ An HTTP error occurred while checking "https://github.com/": Connection closed before full header was received
+
+! Doctor found issues in 2 categories.
+```

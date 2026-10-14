@@ -1,0 +1,73 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+FileSystemException: FileSystemException: Exists failed, path = 'D:\FlutterProjects\parking_app\assets\images\' (OS Error: La syntaxe du nom de fichier, de répertoire ou de volume est incorrecte, errno = 123)
+
+```
+#0      _Directory.existsSync (dart:io/directory_impl.dart:97:7)
+#1      ForwardingFileSystemEntity.existsSync (package:file/src/forwarding/forwarding_file_system_entity.dart:43:33)
+#2      ErrorHandlingDirectory.existsSync.<anonymous closure> (package:flutter_tools/src/base/error_handling_io.dart:726:22)
+#3      _runSync (package:flutter_tools/src/base/error_handling_io.dart:1116:16)
+#4      ErrorHandlingDirectory.existsSync (package:flutter_tools/src/base/error_handling_io.dart:725:12)
+#5      ManifestAssetBundle._parseAssetsFromFolder (package:flutter_tools/src/asset.dart:1174:47)
+#6      ManifestAssetBundle._parseAssets (package:flutter_tools/src/asset.dart:1037:9)
+#7      ManifestAssetBundle.build (package:flutter_tools/src/asset.dart:384:54)
+<asynchronous suspension>
+#8      ResidentWebRunner._updateDevFS (package:flutter_tools/src/isolated/resident_web_runner.dart:780:26)
+<asynchronous suspension>
+#9      ResidentWebRunner.run.<anonymous closure> (package:flutter_tools/src/isolated/resident_web_runner.dart:330:41)
+<asynchronous suspension>
+#10     asyncGuard.<anonymous closure> (package:flutter_tools/src/base/async_guard.dart:108:24)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.44.4, on Microsoft Windows [version 10.0.22631.3527], locale fr-CD) [794ms]
+    [32m•[39m Flutter version 3.44.4 on channel stable at D:\ChrisFlutter\flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision ad70ec4617 (5 weeks ago), 2026-06-24 11:07:06 -0700
+    [32m•[39m Engine revision a10d8ac38d
+    [32m•[39m Dart version 3.12.2
+    [32m•[39m DevTools version 2.57.0
+    [32m•[39m Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android,
+      enable-ios, cli-animations, enable-native-assets, enable-swift-package-manager, omit-legacy-version-file,
+      enable-lldb-debugging, enable-uiscene-migration
+
+[32m[✓][39m Windows Version (11 Professionnel 64-bit, 23H2, 2009) [2,5s]
+
+[32m[✓][39m Android toolchain - develop for Android devices (Android SDK version 36.0.0) [16,2s]
+    [32m•[39m Android SDK at C:\Users\Administrator\AppData\Local\Android\sdk
+    [32m•[39m Emulator version 36.6.11.0 (build_id 15507667) (CL:N/A)
+    [32m•[39m Platform android-36.1, build-tools 36.0.0
+    [32m•[39m Java binary at: D:\Androidstudio\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    [32m•[39m Java version OpenJDK Runtime Environment (build 21.0.10+-14961533-b1163.108)
+    [32m•[39m All Android licenses accepted.
+
+[32m[✓][39m Chrome - develop for the web [297ms]
+    [32m•[39m Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[32m[✓][39m Visual Studio - develop Windows apps (Visual Studio Build Tools 2019 16.11.56) [295ms]
+    [32m•[39m Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+    [32m•[39m Visual Studio Build Tools 2019 version 16.11.37301.9
+    [32m•[39m Windows 10 SDK version 10.0.19041.0
+
+[32m[✓][39m Connected device (3 available) [233ms]
+    [32m•[39m Windows (desktop) • windows • windows-x64    • Microsoft Windows [version 10.0.22631.3527]
+    [32m•[39m Chrome (web)      • chrome  • web-javascript • Google Chrome 150.0.7871.187
+    [32m•[39m Edge (web)        • edge    • web-javascript • Microsoft Edge 107.0.1418.24 (unsupported)
+
+[32m[✓][39m Network resources [3,4s]
+    [32m•[39m All expected network resources are available.
+
+[32m•[39m No issues found!
+```
